@@ -36,10 +36,10 @@ buffer_result buffer_uint8(buffer *buf, uint8_t *x) {
 
 buffer_result buffer_uint16(buffer *buf, uint16_t *x) {
     int i;
-    buffer_result ok;
+    buffer_result result;
     uint8_t b = 0;
     for (i = 0; i < 2; i++) {
-        if ((ok = buffer_uint8(buf, &b)) != RESULT_OK) return ok;
+        if ((result = buffer_uint8(buf, &b)) != RESULT_OK) return result;
         *x = (*x << 8) | b;
     }
     return RESULT_OK;
@@ -47,32 +47,37 @@ buffer_result buffer_uint16(buffer *buf, uint16_t *x) {
 
 buffer_result buffer_uint32(buffer *buf, uint32_t *x) {
     int i;
-    buffer_result ok;
+    buffer_result result;
     uint8_t b = 0;
     for (i = 0; i < 4; i++) {
-        if ((ok = buffer_uint8(buf, &b)) != RESULT_OK) return ok;
+        if ((result = buffer_uint8(buf, &b)) != RESULT_OK) return result;
         *x = (*x << 8) | b;
     }
     return RESULT_OK;
 }
 
+static void fatal_at(buffer *buf, buffer_result result) {
+    fatal("failed buffer read at offset %d: %s",
+          buf->offset, result_str(result));
+}
+
 uint8_t buffer_uint8_or_die(buffer *buf) {
     uint8_t x;
-    buffer_result ok = buffer_uint8(buf, &x);
-    if (ok != RESULT_OK) die(result_str(ok));
+    buffer_result result = buffer_uint8(buf, &x);
+    if (result != RESULT_OK) fatal_at(buf, result);
     return x;
 }
 
 uint16_t buffer_uint16_or_die(buffer *buf) {
     uint16_t x;
-    buffer_result ok = buffer_uint16(buf, &x);
-    if (ok != RESULT_OK) die(result_str(ok));
+    buffer_result result = buffer_uint16(buf, &x);
+    if (result != RESULT_OK) fatal_at(buf, result);
     return x;
 }
 
 uint32_t buffer_uint32_or_die(buffer *buf) {
     uint32_t x;
-    buffer_result ok = buffer_uint32(buf, &x);
-    if (ok != RESULT_OK) die(result_str(ok));
+    buffer_result result = buffer_uint32(buf, &x);
+    if (result != RESULT_OK) fatal_at(buf, result);
     return x;
 }

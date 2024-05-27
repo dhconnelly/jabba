@@ -26,12 +26,7 @@ static void disasm(FILE *f) {
 int main(int argc, char *argv[]) {
     if (argc != 2) die("usage: disasm <class-file>");
     FILE *f = fopen(argv[1], "r");
-    /* TODO: make logging functions varargs and replace this */
-    if (f == NULL) {
-        fprintf(stderr, "disasm: failed to open class file %s: %s\n",
-                argv[1], strerror(errno));
-        exit(1);
-    }
+    if (f == NULL) fatal("failed to open %s: %s", argv[1], strerror(errno));
     disasm(f);
     return 0;
 }
