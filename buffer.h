@@ -9,7 +9,7 @@
 typedef enum buffer_result {
     RESULT_OK,
     RESULT_EOF,
-    RESULT_ERR,
+    RESULT_ERRNO,
 } buffer_result;
 
 const char *result_str(buffer_result result);

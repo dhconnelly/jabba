@@ -10,7 +10,7 @@ const char *result_str(buffer_result result) {
     switch (result) {
         case RESULT_OK: return "ok";
         case RESULT_EOF: return "eof";
-        case RESULT_ERR: return strerror(errno);
+        case RESULT_ERRNO: return strerror(errno);
     }
     assert(0);
 }
@@ -24,7 +24,7 @@ buffer_result buffer_uint8(buffer *buf, uint8_t *x) {
     int c;
     *x = 0;
     if ((c = fgetc(buf->f)) == EOF && ferror(buf->f)) {
-        return RESULT_ERR;
+        return RESULT_ERRNO;
     } else if (c == EOF) {
         return RESULT_EOF;
     } else {
