@@ -24,6 +24,7 @@ const char *cp_tag_str(cp_tag tag) {
         case CP_CLASS: return "CONSTANT_Class";
         case CP_NAME_AND_TYPE: return "CONSTANT_NameAndType";
         case CP_UTF8: return "CONSTANT_Utf8";
+        case CP_FIELDREF: return "CONSTANT_Fieldref";
     }
     assert(0);
 }
@@ -31,6 +32,12 @@ const char *cp_tag_str(cp_tag tag) {
 static result parse_cp_methodref(buffer *buf, cp_methodref *methodref) {
     ASSIGN_UINT_OR_RETURN(16, methodref->class_index, buf);
     ASSIGN_UINT_OR_RETURN(16, methodref->name_and_type_index, buf);
+    return RESULT_OK;
+}
+
+static result parse_cp_fieldref(buffer *buf, cp_fieldref *fieldref) {
+    ASSIGN_UINT_OR_RETURN(16, fieldref->class_index, buf);
+    ASSIGN_UINT_OR_RETURN(16, fieldref->name_and_type_index, buf);
     return RESULT_OK;
 }
 
@@ -82,6 +89,9 @@ const char *cp_info_str(cp_info cp) {
         case CP_UTF8:
             written = sprintf(s, "cp_utf8 { '%s' }", utf8_str(cp.info.utf8));
             break;
+        case CP_FIELDREF:
+            written = sprintf(s, "cp_fieldref { class_index: %d, name_and_type_index: %d }", cp.info.fieldref.class_index, cp.info.fieldref.name_and_type_index);
+            break;
         default:
             fatal("unknown constant pool tag: %d", cp.tag);
             break;
@@ -106,8 +116,11 @@ static result parse_cp_info(buffer *buf, cp_info *x) {
         case CP_UTF8:
             ASSIGN_OR_RETURN(cp_utf8, x->info.utf8, buf);
             break;
+        case CP_FIELDREF:
+            ASSIGN_OR_RETURN(cp_fieldref, x->info.fieldref, buf);
+            break;
         default:
-            fatal("unknown constant pool tag: %d", tag);
+            fatal("bad cp tag at offset %d: %d", buf->offset, tag);
             break;
     }
     x->tag = tag;

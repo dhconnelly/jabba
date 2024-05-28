@@ -16,6 +16,11 @@ typedef struct cp_methodref {
     uint16_t name_and_type_index;
 } cp_methodref;
 
+typedef struct cp_fieldref {
+    uint16_t class_index;
+    uint16_t name_and_type_index;
+} cp_fieldref;
+
 typedef struct cp_class {
     uint16_t name_index;
 } cp_class;
@@ -35,6 +40,7 @@ typedef enum cp_tag {
     CP_METHODREF = 10,
     CP_NAME_AND_TYPE = 12,
     CP_UTF8 = 1,
+    CP_FIELDREF = 9,
 } cp_tag;
 
 const char *cp_tag_str(cp_tag tag);
@@ -46,6 +52,7 @@ typedef struct cp_info {
         cp_class class;
         cp_name_and_type name_and_type;
         cp_utf8 utf8;
+        cp_fieldref fieldref;
     } info;
 } cp_info;
 
