@@ -20,14 +20,19 @@
 const char *cp_tag_str(cp_tag tag) {
     switch (tag) {
         case CP_METHODREF: return "CONSTANT_Methodref";
+        case CP_CLASS: return "CONSTANT_Class";
     }
     assert(0);
 }
 
 static result parse_cp_methodref(buffer *buf, cp_methodref *methodref) {
-    printf("reading methodref from offset %d\n", buf->offset);
     ASSIGN_UINT_OR_RETURN(16, methodref->class_index, buf);
     ASSIGN_UINT_OR_RETURN(16, methodref->name_and_type_index, buf);
+    return RESULT_OK;
+}
+
+static result parse_cp_class(buffer *buf, cp_class *class) {
+    ASSIGN_UINT_OR_RETURN(16, class->name_index, buf);
     return RESULT_OK;
 }
 
@@ -40,6 +45,12 @@ const char *cp_info_str(cp_info cp) {
         case CP_METHODREF:
             written = sprintf(s, "cp_methodref { class_index: %d, name_and_type_index: %d }", cp.info.methodref.class_index, cp.info.methodref.name_and_type_index);
             break;
+        case CP_CLASS:
+            written = sprintf(s, "cp_class { name_index: %d }", cp.info.class.name_index);
+            break;
+        default:
+            fatal("unknown constant pool tag: %d", cp.tag);
+            break;
     }
     assert(written < kMaxStrLen);
     return s;
@@ -51,6 +62,9 @@ static result parse_cp_info(buffer *buf, cp_info *x) {
     switch (tag) {
         case CP_METHODREF:
             ASSIGN_OR_RETURN(cp_methodref, x->info.methodref, buf);
+            break;
+        case CP_CLASS:
+            ASSIGN_OR_RETURN(cp_class, x->info.class, buf);
             break;
         default:
             fatal("unknown constant pool tag: %d", tag);

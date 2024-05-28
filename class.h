@@ -16,7 +16,12 @@ typedef struct cp_methodref {
     uint16_t name_and_type_index;
 } cp_methodref;
 
+typedef struct cp_class {
+    uint16_t name_index;
+} cp_class;
+
 typedef enum cp_tag {
+    CP_CLASS = 7,
     CP_METHODREF = 10,
 } cp_tag;
 
@@ -26,6 +31,7 @@ typedef struct cp_info {
     cp_tag tag;
     union {
         cp_methodref methodref;
+        cp_class class;
     } info;
 } cp_info;
 
