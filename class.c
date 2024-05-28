@@ -21,6 +21,7 @@ const char *cp_tag_str(cp_tag tag) {
     switch (tag) {
         case CP_METHODREF: return "CONSTANT_Methodref";
         case CP_CLASS: return "CONSTANT_Class";
+        case CP_NAME_AND_TYPE: return "CONSTANT_NameAndType";
     }
     assert(0);
 }
@@ -36,6 +37,12 @@ static result parse_cp_class(buffer *buf, cp_class *class) {
     return RESULT_OK;
 }
 
+static result parse_cp_name_and_type(buffer *buf, cp_name_and_type *nat) {
+    ASSIGN_UINT_OR_RETURN(16, nat->name_index, buf);
+    ASSIGN_UINT_OR_RETURN(16, nat->descriptor_index, buf);
+    return RESULT_OK;
+}
+
 static const int kMaxStrLen = 128;
 
 const char *cp_info_str(cp_info cp) {
@@ -48,6 +55,8 @@ const char *cp_info_str(cp_info cp) {
         case CP_CLASS:
             written = sprintf(s, "cp_class { name_index: %d }", cp.info.class.name_index);
             break;
+        case CP_NAME_AND_TYPE:
+            written = sprintf(s, "cp_name_and_type { name_index: %d, descriptor_index: %d }", cp.info.name_and_type.name_index, cp.info.name_and_type.descriptor_index);
         default:
             fatal("unknown constant pool tag: %d", cp.tag);
             break;
@@ -65,6 +74,9 @@ static result parse_cp_info(buffer *buf, cp_info *x) {
             break;
         case CP_CLASS:
             ASSIGN_OR_RETURN(cp_class, x->info.class, buf);
+            break;
+        case CP_NAME_AND_TYPE:
+            ASSIGN_OR_RETURN(cp_name_and_type, x->info.name_and_type, buf);
             break;
         default:
             fatal("unknown constant pool tag: %d", tag);

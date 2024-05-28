@@ -20,9 +20,15 @@ typedef struct cp_class {
     uint16_t name_index;
 } cp_class;
 
+typedef struct cp_name_and_type {
+    uint16_t name_index;
+    uint16_t descriptor_index;
+} cp_name_and_type;
+
 typedef enum cp_tag {
     CP_CLASS = 7,
     CP_METHODREF = 10,
+    CP_NAME_AND_TYPE = 12,
 } cp_tag;
 
 const char *cp_tag_str(cp_tag tag);
@@ -32,6 +38,7 @@ typedef struct cp_info {
     union {
         cp_methodref methodref;
         cp_class class;
+        cp_name_and_type name_and_type;
     } info;
 } cp_info;
 
