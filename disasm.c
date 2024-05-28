@@ -13,14 +13,16 @@ static void disasm(FILE *f) {
 
     buffer buf;
     buffer_init(&buf, f);
-    ClassFile class;
+    class_file class;
     class.magic = buffer_uint32_or_die(&buf);
     class.minor_version = buffer_uint16_or_die(&buf);
     class.major_version = buffer_uint16_or_die(&buf);
+    class.constant_pool_count = buffer_uint16_or_die(&buf);
 
     printf("magic: 0x%X\n", class.magic);
     printf("minor_version: %d\n", class.minor_version);
     printf("major version: %d\n", class.major_version);
+    printf("constant pool count %d\n", class.constant_pool_count);
 }
 
 int main(int argc, char *argv[]) {
