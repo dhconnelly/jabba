@@ -152,5 +152,11 @@ result parse_class(buffer *buf, class_file *class) {
         ASSIGN_OR_RETURN(cp_info, class->constant_pool[i], buf);
     }
 
+    ASSIGN_UINT_OR_RETURN(16, class->access_flags, buf);
+    ASSIGN_UINT_OR_RETURN(16, class->this_class, buf);
+    ASSIGN_UINT_OR_RETURN(16, class->super_class, buf);
+
+    ASSIGN_UINT_OR_RETURN(16, class->interfaces_count, buf);
+
     return RESULT_OK;
 }

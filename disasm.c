@@ -29,6 +29,9 @@ static void disasm(FILE *f) {
     for (i = 1; i < class.constant_pool_count; i++) {
         printf("cp_info[%d] = %s\n", i, cp_info_str(class.constant_pool[i]));
     }
+    printf("access flags: 0x%X\n", class.access_flags);
+    printf("this class: %d\n", class.this_class);
+    printf("super class: %d\n", class.super_class);
 }
 
 int main(int argc, char *argv[]) {
