@@ -1,6 +1,7 @@
 #include "class.h"
 
 #include <assert.h>
+#include <memory.h>
 #include <stdlib.h>
 
 #include "logging.h"
@@ -22,6 +23,7 @@ const char *cp_tag_str(cp_tag tag) {
         case CP_METHODREF: return "CONSTANT_Methodref";
         case CP_CLASS: return "CONSTANT_Class";
         case CP_NAME_AND_TYPE: return "CONSTANT_NameAndType";
+        case CP_UTF8: return "CONSTANT_Utf8";
     }
     assert(0);
 }
@@ -43,8 +45,27 @@ static result parse_cp_name_and_type(buffer *buf, cp_name_and_type *nat) {
     return RESULT_OK;
 }
 
-static const int kMaxStrLen = 128;
+static result parse_cp_utf8(buffer *buf, cp_utf8 *utf8) {
+    ASSIGN_UINT_OR_RETURN(16, utf8->length, buf);
+    utf8->bytes = malloc(utf8->length);
+    int i;
+    for (i = 0; i < utf8->length; i++) {
+        ASSIGN_UINT_OR_RETURN(8, utf8->bytes[i], buf);
+    }
+    return RESULT_OK;
+}
 
+/* TODO: fix string leak */
+static char *utf8_str(cp_utf8 utf8) {
+    char *s = malloc(utf8.length+1);
+    memcpy(s, utf8.bytes, utf8.length);
+    s[utf8.length] = '\0';
+    return s;
+}
+
+static const int kMaxStrLen = 512;
+
+/* TODO: fix string leak and make sure it doesn't overflow */
 const char *cp_info_str(cp_info cp) {
     char *s = malloc(kMaxStrLen);
     int written;
@@ -57,6 +78,10 @@ const char *cp_info_str(cp_info cp) {
             break;
         case CP_NAME_AND_TYPE:
             written = sprintf(s, "cp_name_and_type { name_index: %d, descriptor_index: %d }", cp.info.name_and_type.name_index, cp.info.name_and_type.descriptor_index);
+            break;
+        case CP_UTF8:
+            written = sprintf(s, "cp_utf8 { '%s' }", utf8_str(cp.info.utf8));
+            break;
         default:
             fatal("unknown constant pool tag: %d", cp.tag);
             break;
@@ -77,6 +102,9 @@ static result parse_cp_info(buffer *buf, cp_info *x) {
             break;
         case CP_NAME_AND_TYPE:
             ASSIGN_OR_RETURN(cp_name_and_type, x->info.name_and_type, buf);
+            break;
+        case CP_UTF8:
+            ASSIGN_OR_RETURN(cp_utf8, x->info.utf8, buf);
             break;
         default:
             fatal("unknown constant pool tag: %d", tag);
