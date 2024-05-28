@@ -35,12 +35,17 @@ typedef struct cp_utf8 {
     uint8_t *bytes;
 } cp_utf8;
 
+typedef struct cp_string {
+    uint16_t string_index;
+} cp_string;
+
 typedef enum cp_tag {
     CP_CLASS = 7,
     CP_METHODREF = 10,
     CP_NAME_AND_TYPE = 12,
     CP_UTF8 = 1,
     CP_FIELDREF = 9,
+    CP_STRING = 8,
 } cp_tag;
 
 const char *cp_tag_str(cp_tag tag);
@@ -53,6 +58,7 @@ typedef struct cp_info {
         cp_name_and_type name_and_type;
         cp_utf8 utf8;
         cp_fieldref fieldref;
+        cp_string string;
     } info;
 } cp_info;
 

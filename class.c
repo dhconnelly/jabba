@@ -25,6 +25,7 @@ const char *cp_tag_str(cp_tag tag) {
         case CP_NAME_AND_TYPE: return "CONSTANT_NameAndType";
         case CP_UTF8: return "CONSTANT_Utf8";
         case CP_FIELDREF: return "CONSTANT_Fieldref";
+        case CP_STRING: return "CONSTANT_String";
     }
     assert(0);
 }
@@ -62,6 +63,11 @@ static result parse_cp_utf8(buffer *buf, cp_utf8 *utf8) {
     return RESULT_OK;
 }
 
+static result parse_cp_string(buffer *buf, cp_string *string) {
+    ASSIGN_UINT_OR_RETURN(16, string->string_index, buf);
+    return RESULT_OK;
+}
+
 /* TODO: fix string leak */
 static char *utf8_str(cp_utf8 utf8) {
     char *s = malloc(utf8.length+1);
@@ -92,6 +98,9 @@ const char *cp_info_str(cp_info cp) {
         case CP_FIELDREF:
             written = sprintf(s, "cp_fieldref { class_index: %d, name_and_type_index: %d }", cp.info.fieldref.class_index, cp.info.fieldref.name_and_type_index);
             break;
+        case CP_STRING:
+            written = sprintf(s, "cp_string { string_index: %d }", cp.info.string.string_index);
+            break;
         default:
             fatal("unknown constant pool tag: %d", cp.tag);
             break;
@@ -118,6 +127,9 @@ static result parse_cp_info(buffer *buf, cp_info *x) {
             break;
         case CP_FIELDREF:
             ASSIGN_OR_RETURN(cp_fieldref, x->info.fieldref, buf);
+            break;
+        case CP_STRING:
+            ASSIGN_OR_RETURN(cp_string, x->info.string, buf);
             break;
         default:
             fatal("bad cp tag at offset %d: %d", buf->offset, tag);
