@@ -14,15 +14,21 @@ static void disasm(FILE *f) {
 
     buffer buf;
     buffer_init(&buf, f);
-
     class_file class;
     result r = parse_class(&buf, &class);
-    if (r != RESULT_OK) fatal("failed to read class: %s", result_str(r));
+    if (r != RESULT_OK) {
+        fatal("failed to read class at offset %d: %s",
+                buf.offset, result_str(r));
+    }
 
+    int i;
     printf("magic: 0x%X\n", class.magic);
     printf("minor_version: %d\n", class.minor_version);
     printf("major version: %d\n", class.major_version);
     printf("constant pool count %d\n", class.constant_pool_count);
+    for (i = 1; i < class.constant_pool_count; i++) {
+        printf("cp_info[%d] = %s\n", i, cp_info_str(class.constant_pool[i]));
+    }
 }
 
 int main(int argc, char *argv[]) {

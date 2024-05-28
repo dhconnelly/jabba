@@ -11,10 +11,25 @@
  * https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
  */
 
+typedef struct cp_methodref {
+    uint16_t class_index;
+    uint16_t name_and_type_index;
+} cp_methodref;
+
+typedef enum cp_tag {
+    CP_METHODREF = 10,
+} cp_tag;
+
+const char *cp_tag_str(cp_tag tag);
+
 typedef struct cp_info {
-    uint8_t tag;
-    uint8_t *info;
+    cp_tag tag;
+    union {
+        cp_methodref methodref;
+    } info;
 } cp_info;
+
+const char *cp_info_str(cp_info info);
 
 typedef struct attribute_info {
     uint16_t attribute_name_index;
