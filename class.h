@@ -1,6 +1,11 @@
 #ifndef CLASS_H_
 #define CLASS_H_
 
+#include <stdio.h>
+
+#include "buffer.h"
+#include "result.h"
+
 /*
  * Definitions for working with the Java class file format:
  * https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
@@ -51,5 +56,7 @@ typedef struct class_file {
     uint16_t attributes_count;
     attribute_info *attributes;
 } class_file;
+
+result parse_class(buffer *buf, class_file *class);
 
 #endif

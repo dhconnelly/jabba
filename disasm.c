@@ -7,17 +7,17 @@
 #include "buffer.h"
 #include "class.h"
 #include "logging.h"
+#include "result.h"
 
 static void disasm(FILE *f) {
     trace("disassembling...");
 
     buffer buf;
     buffer_init(&buf, f);
+
     class_file class;
-    class.magic = buffer_uint32_or_die(&buf);
-    class.minor_version = buffer_uint16_or_die(&buf);
-    class.major_version = buffer_uint16_or_die(&buf);
-    class.constant_pool_count = buffer_uint16_or_die(&buf);
+    result r = parse_class(&buf, &class);
+    if (r != RESULT_OK) fatal("failed to read class: %s", result_str(r));
 
     printf("magic: 0x%X\n", class.magic);
     printf("minor_version: %d\n", class.minor_version);

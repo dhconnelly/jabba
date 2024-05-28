@@ -46,29 +46,3 @@ result buffer_uint32(buffer *buf, uint32_t *x) {
     }
     return RESULT_OK;
 }
-
-static void fatal_at(buffer *buf, result result) {
-    fatal("failed buffer read at offset %d: %s",
-          buf->offset, result_str(result));
-}
-
-uint8_t buffer_uint8_or_die(buffer *buf) {
-    uint8_t x;
-    result result = buffer_uint8(buf, &x);
-    if (result != RESULT_OK) fatal_at(buf, result);
-    return x;
-}
-
-uint16_t buffer_uint16_or_die(buffer *buf) {
-    uint16_t x;
-    result result = buffer_uint16(buf, &x);
-    if (result != RESULT_OK) fatal_at(buf, result);
-    return x;
-}
-
-uint32_t buffer_uint32_or_die(buffer *buf) {
-    uint32_t x;
-    result result = buffer_uint32(buf, &x);
-    if (result != RESULT_OK) fatal_at(buf, result);
-    return x;
-}

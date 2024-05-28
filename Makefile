@@ -9,13 +9,16 @@ all: $(TARGETS)
 clean:
 	rm -f *.o $(TARGETS)
 
-disasm: disasm.o logging.o buffer.o result.o
+disasm: disasm.o logging.o buffer.o result.o class.o
 	$(CC) $(CFLAGS) $^ -o $@
+
+logging.o: logging.c logging.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
 result.o: result.c result.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-logging.o: logging.c logging.h
+class.o: class.c class.h result.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 buffer.o: buffer.c buffer.h result.h
