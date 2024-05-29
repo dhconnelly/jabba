@@ -112,6 +112,21 @@ static int utf8_str(cp_utf8 utf8, char s[], int max_len) {
     return utf8.length;
 }
 
+int attribute_info_str(attribute_info attribute, char s[], int max_len) {
+    int written = sprintf(s, "attribute_info { attribute_name_index: %d, attribute_length: %d }", attribute.attribute_name_index, attribute.attribute_length);
+    return written;
+}
+
+int field_info_str(field_info field, char s[], int max_len) {
+    int written = sprintf(s, "field_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes_count: %d }", field.access_flags, field.name_index, field.descriptor_index, field.attributes_count);
+    return written;
+}
+
+int method_info_str(method_info method, char s[], int max_len) {
+    int written = sprintf(s, "method_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes_count: %d }", method.access_flags, method.name_index, method.descriptor_index, method.attributes_count);
+    return written;
+}
+
 int cp_info_str(cp_info cp, char s[], int max_len) {
     int written = 0;
     switch (cp.tag) {
@@ -197,28 +212,24 @@ result parse_class(buffer *buf, class_file *class) {
     ASSIGN_UINT_OR_RETURN(16, class->this_class, buf);
     ASSIGN_UINT_OR_RETURN(16, class->super_class, buf);
 
-    printf("interfaces\n");
     ASSIGN_UINT_OR_RETURN(16, class->interfaces_count, buf);
     class->interfaces = malloc(class->interfaces_count * sizeof(uint16_t));
     for (i = 0; i < class->interfaces_count; i++) {
         ASSIGN_UINT_OR_RETURN(16, class->interfaces[i], buf);
     }
 
-    printf("fields\n");
     ASSIGN_UINT_OR_RETURN(16, class->fields_count, buf);
     class->fields = malloc(class->fields_count * sizeof(field_info));
     for (i = 0; i < class->fields_count; i++) {
         ASSIGN_OR_RETURN(field_info, class->fields[i], buf);
     }
 
-    printf("methods\n");
     ASSIGN_UINT_OR_RETURN(16, class->methods_count, buf);
     class->methods = malloc(class->methods_count * sizeof(method_info));
     for (i = 0; i < class->methods_count; i++) {
         ASSIGN_OR_RETURN(method_info, class->methods[i], buf);
     }
 
-    printf("attrs\n");
     ASSIGN_UINT_OR_RETURN(16, class->attributes_count, buf);
     class->attributes = malloc(class->attributes_count * sizeof(attribute_info));
     for (i = 0; i < class->attributes_count; i++) {

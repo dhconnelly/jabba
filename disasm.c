@@ -40,6 +40,18 @@ static void disasm(FILE *f) {
     for (i = 0; i < class.interfaces_count; i++) {
         printf("interfaces[%d] = %d\n", i, class.interfaces[i]);
     }
+    for (i = 0; i < class.fields_count; i++) {
+        field_info_str(class.fields[i], s, BUF_LEN);
+        printf("fields[%d] = %s\n", i, s);
+    }
+    for (i = 0; i < class.methods_count; i++) {
+        method_info_str(class.methods[i], s, BUF_LEN);
+        printf("methods[%d] = %s\n", i, s);
+    }
+    for (i = 0; i < class.attributes_count; i++) {
+        attribute_info_str(class.attributes[i], s, BUF_LEN);
+        printf("attributes[%d] = %s\n", i, s);
+    }
 }
 
 int main(int argc, char *argv[]) {

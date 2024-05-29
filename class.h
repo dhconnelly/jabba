@@ -72,6 +72,8 @@ typedef struct attribute_info {
     uint8_t *info;
 } attribute_info;
 
+int attribute_info_str(attribute_info field, char s[], int max_len);
+
 typedef struct field_info {
     uint16_t access_flags;
     uint16_t name_index;
@@ -80,6 +82,8 @@ typedef struct field_info {
     attribute_info *attributes;
 } field_info;
 
+int field_info_str(field_info field, char s[], int max_len);
+
 typedef struct method_info {
     uint16_t access_flags;
     uint16_t name_index;
@@ -87,6 +91,8 @@ typedef struct method_info {
     uint16_t attributes_count;
     attribute_info *attributes;
 } method_info;
+
+int method_info_str(method_info method, char s[], int max_len);
 
 typedef struct class_file {
     uint32_t magic;
