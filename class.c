@@ -68,45 +68,49 @@ static result parse_cp_string(buffer *buf, cp_string *string) {
     return RESULT_OK;
 }
 
-/* TODO: fix string leak */
-static char *utf8_str(cp_utf8 utf8) {
-    char *s = malloc(utf8.length+1);
+static int utf8_str(cp_utf8 utf8, char s[], int max_len) {
+    assert(utf8.length < max_len-1);
     memcpy(s, utf8.bytes, utf8.length);
     s[utf8.length] = '\0';
-    return s;
+    return utf8.length;
 }
 
-static const int kMaxStrLen = 512;
-
-/* TODO: fix string leak and make sure it doesn't overflow */
-const char *cp_info_str(cp_info cp) {
-    char *s = malloc(kMaxStrLen);
-    int written;
+int cp_info_str(cp_info cp, char s[], int max_len) {
+    int written = 0;
     switch (cp.tag) {
         case CP_METHODREF:
             written = sprintf(s, "cp_methodref { class_index: %d, name_and_type_index: %d }", cp.info.methodref.class_index, cp.info.methodref.name_and_type_index);
             break;
+
         case CP_CLASS:
             written = sprintf(s, "cp_class { name_index: %d }", cp.info.class.name_index);
             break;
+
         case CP_NAME_AND_TYPE:
             written = sprintf(s, "cp_name_and_type { name_index: %d, descriptor_index: %d }", cp.info.name_and_type.name_index, cp.info.name_and_type.descriptor_index);
             break;
-        case CP_UTF8:
-            written = sprintf(s, "cp_utf8 { '%s' }", utf8_str(cp.info.utf8));
+
+        case CP_UTF8: {
+            written = sprintf(s, "cp_utf8 { '");
+            written += utf8_str(cp.info.utf8, s+written, max_len-written);
+            written += sprintf(s+written, "' }");
             break;
+        }
+
         case CP_FIELDREF:
             written = sprintf(s, "cp_fieldref { class_index: %d, name_and_type_index: %d }", cp.info.fieldref.class_index, cp.info.fieldref.name_and_type_index);
             break;
+
         case CP_STRING:
             written = sprintf(s, "cp_string { string_index: %d }", cp.info.string.string_index);
             break;
+
         default:
             fatal("unknown constant pool tag: %d", cp.tag);
             break;
     }
-    assert(written < kMaxStrLen);
-    return s;
+    assert(written < max_len);
+    return written;
 }
 
 static result parse_cp_info(buffer *buf, cp_info *x) {
@@ -157,6 +161,9 @@ result parse_class(buffer *buf, class_file *class) {
     ASSIGN_UINT_OR_RETURN(16, class->super_class, buf);
 
     ASSIGN_UINT_OR_RETURN(16, class->interfaces_count, buf);
+    for (i = 0; i < class->interfaces_count; i++) {
+        ASSIGN_UINT_OR_RETURN(16, class->interfaces[i], buf);
+    }
 
     return RESULT_OK;
 }

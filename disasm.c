@@ -9,6 +9,8 @@
 #include "logging.h"
 #include "result.h"
 
+static const int BUF_LEN = 512;
+
 static void disasm(FILE *f) {
     trace("disassembling...");
 
@@ -22,16 +24,22 @@ static void disasm(FILE *f) {
     }
 
     int i;
+    char s[BUF_LEN];
+
     printf("magic: 0x%X\n", class.magic);
     printf("minor_version: %d\n", class.minor_version);
     printf("major version: %d\n", class.major_version);
     printf("constant pool count %d\n", class.constant_pool_count);
     for (i = 1; i < class.constant_pool_count; i++) {
-        printf("cp_info[%d] = %s\n", i, cp_info_str(class.constant_pool[i]));
+        cp_info_str(class.constant_pool[i], s, BUF_LEN);
+        printf("cp_info[%d] = %s\n", i, s);
     }
     printf("access flags: 0x%X\n", class.access_flags);
     printf("this class: %d\n", class.this_class);
     printf("super class: %d\n", class.super_class);
+    for (i = 0; i < class.interfaces_count; i++) {
+        printf("interfaces[%d] = %d\n", i, class.interfaces[i]);
+    }
 }
 
 int main(int argc, char *argv[]) {

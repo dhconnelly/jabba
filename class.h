@@ -62,7 +62,7 @@ typedef struct cp_info {
     } info;
 } cp_info;
 
-const char *cp_info_str(cp_info info);
+int cp_info_str(cp_info info, char s[], int max_len);
 
 typedef struct attribute_info {
     uint16_t attribute_name_index;
