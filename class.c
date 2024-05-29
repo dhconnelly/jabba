@@ -113,17 +113,17 @@ static int utf8_str(cp_utf8 utf8, char s[], int max_len) {
 }
 
 int attribute_info_str(attribute_info attribute, char s[], int max_len) {
-    int written = sprintf(s, "attribute_info { attribute_name_index: %d, attribute_length: %d }", attribute.attribute_name_index, attribute.attribute_length);
+    int written = sprintf(s, "attribute_info { attribute_name_index: %d, attribute_length: %d, attributes: <elided> }", attribute.attribute_name_index, attribute.attribute_length);
     return written;
 }
 
 int field_info_str(field_info field, char s[], int max_len) {
-    int written = sprintf(s, "field_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes_count: %d }", field.access_flags, field.name_index, field.descriptor_index, field.attributes_count);
+    int written = sprintf(s, "field_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes_count: %d, attributes: <elided> }", field.access_flags, field.name_index, field.descriptor_index, field.attributes_count);
     return written;
 }
 
 int method_info_str(method_info method, char s[], int max_len) {
-    int written = sprintf(s, "method_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes_count: %d }", method.access_flags, method.name_index, method.descriptor_index, method.attributes_count);
+    int written = sprintf(s, "method_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes_count: %d, attributes: <elided> }", method.access_flags, method.name_index, method.descriptor_index, method.attributes_count);
     return written;
 }
 
