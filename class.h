@@ -67,6 +67,8 @@ int cp_info_str(cp_info info, char s[], int max_len);
 typedef struct attribute_info {
     uint16_t attribute_name_index;
     uint32_t attribute_length;
+
+    /* TODO: parse all attribute types */
     uint8_t *info;
 } attribute_info;
 
@@ -106,5 +108,7 @@ typedef struct class_file {
 } class_file;
 
 result parse_class(buffer *buf, class_file *class);
+
+/* TODO: free */
 
 #endif

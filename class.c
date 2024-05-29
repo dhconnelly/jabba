@@ -68,6 +68,29 @@ static result parse_cp_string(buffer *buf, cp_string *string) {
     return RESULT_OK;
 }
 
+static result parse_attribute_info(buffer *buf, attribute_info *attribute) {
+    ASSIGN_UINT_OR_RETURN(16, attribute->attribute_name_index, buf);
+    ASSIGN_UINT_OR_RETURN(32, attribute->attribute_length, buf);
+    attribute->info = malloc(attribute->attribute_length);
+    int i;
+    for (i = 0; i < attribute->attribute_length; i++) {
+        ASSIGN_UINT_OR_RETURN(8, attribute->info[i], buf);
+    }
+    return RESULT_OK;
+}
+
+static result parse_field_info(buffer *buf, field_info *field) {
+    ASSIGN_UINT_OR_RETURN(16, field->access_flags, buf);
+    ASSIGN_UINT_OR_RETURN(16, field->name_index, buf);
+    ASSIGN_UINT_OR_RETURN(16, field->descriptor_index, buf);
+    ASSIGN_UINT_OR_RETURN(16, field->attributes_count, buf);
+    int i;
+    for (i = 0; i < field->attributes_count; i++) {
+        ASSIGN_OR_RETURN(attribute_info, field->attributes[i], buf);
+    }
+    return RESULT_OK;
+}
+
 static int utf8_str(cp_utf8 utf8, char s[], int max_len) {
     assert(utf8.length < max_len-1);
     memcpy(s, utf8.bytes, utf8.length);
@@ -163,6 +186,11 @@ result parse_class(buffer *buf, class_file *class) {
     ASSIGN_UINT_OR_RETURN(16, class->interfaces_count, buf);
     for (i = 0; i < class->interfaces_count; i++) {
         ASSIGN_UINT_OR_RETURN(16, class->interfaces[i], buf);
+    }
+
+    ASSIGN_UINT_OR_RETURN(16, class->fields_count, buf);
+    for (i = 0; i < class->fields_count; i++) {
+        ASSIGN_OR_RETURN(field_info, class->fields[i], buf);
     }
 
     return RESULT_OK;
