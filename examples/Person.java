@@ -1,3 +1,4 @@
 public class Person implements Identifiable {
-    public String id() { return "foo"; }
+    private static String ID = "foo";
+    public String id() { return ID; }
 }
