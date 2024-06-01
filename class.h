@@ -31,8 +31,7 @@ typedef struct cp_name_and_type {
 } cp_name_and_type;
 
 typedef struct cp_utf8 {
-    uint16_t length;
-    uint8_t *bytes;
+    char *s;
 } cp_utf8;
 
 typedef struct cp_string {
@@ -64,12 +63,18 @@ typedef struct cp_info {
 
 int cp_info_str(cp_info info, char s[], int max_len);
 
-typedef struct attribute_info {
-    uint16_t attribute_name_index;
-    uint32_t attribute_length;
+typedef enum attribute_type {
+    ATTR_CODE,
+} attribute_type;
 
-    /* TODO: parse all attribute types */
-    uint8_t *info;
+typedef struct code_attr {
+} code_attr;
+
+typedef struct attribute_info {
+    attribute_type type;
+    union {
+        code_attr code;
+    } info;
 } attribute_info;
 
 int attribute_info_str(attribute_info field, char s[], int max_len);

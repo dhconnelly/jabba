@@ -6,15 +6,15 @@
 
 #include "logging.h"
 
-#define UINT_OR_RETURN(bits, lvalue, b) \
-    do { \
-        result r = buffer_uint##bits(b, &lvalue); \
-        if (r != RESULT_OK) return r; \
-    } while (0)
-
 #define PARSE_OR_RETURN(obj, lvalue, b) \
     do { \
         result r = parse_##obj(b, &lvalue); \
+        if (r != RESULT_OK) return r; \
+    } while (0)
+
+#define PARSE_OR_RETURN1(obj, lvalue, b, arg) \
+    do { \
+        result r = parse_##obj(b, &lvalue, arg); \
         if (r != RESULT_OK) return r; \
     } while (0)
 
@@ -54,12 +54,15 @@ static result parse_cp_name_and_type(buffer *buf, cp_name_and_type *nat) {
 }
 
 static result parse_cp_utf8(buffer *buf, cp_utf8 *utf8) {
-    UINT_OR_RETURN(16, utf8->length, buf);
-    utf8->bytes = malloc(utf8->length);
-    int i;
-    for (i = 0; i < utf8->length; i++) {
-        UINT_OR_RETURN(8, utf8->bytes[i], buf);
+    uint16_t len;
+    UINT_OR_RETURN(16, len, buf);
+    utf8->s = malloc(len+1);
+    uint8_t i, c;
+    for (i = 0; i < len; i++) {
+        UINT_OR_RETURN(8, c, buf);
+        utf8->s[i] = c;
     }
+    utf8->s[len] = '\0';
     return RESULT_OK;
 }
 
@@ -68,18 +71,26 @@ static result parse_cp_string(buffer *buf, cp_string *string) {
     return RESULT_OK;
 }
 
-static result parse_attribute_info(buffer *buf, attribute_info *attribute) {
-    UINT_OR_RETURN(16, attribute->attribute_name_index, buf);
-    UINT_OR_RETURN(32, attribute->attribute_length, buf);
-    attribute->info = malloc(attribute->attribute_length);
+
+static result parse_attribute_info(
+        buffer *buf,
+        attribute_info *attribute,
+        cp_info *cp) {
+    uint16_t attr_idx;
+    UINT_OR_RETURN(16, attr_idx, buf);
+    uint32_t len;   
+    UINT_OR_RETURN(32, len, buf);
+
+    printf("ATTR: %s\n", cp[attr_idx].info.utf8.s);
+
     int i;
-    for (i = 0; i < attribute->attribute_length; i++) {
-        UINT_OR_RETURN(8, attribute->info[i], buf);
-    }
+    uint8_t b;
+    for (i = 0; i < len; i++) UINT_OR_RETURN(8, b, buf);
+
     return RESULT_OK;
 }
 
-static result parse_field_info(buffer *buf, field_info *field) {
+static result parse_field_info(buffer *buf, field_info *field, cp_info *cp) {
     UINT_OR_RETURN(16, field->access_flags, buf);
     UINT_OR_RETURN(16, field->name_index, buf);
     UINT_OR_RETURN(16, field->descriptor_index, buf);
@@ -87,12 +98,12 @@ static result parse_field_info(buffer *buf, field_info *field) {
     field->attributes = malloc(field->attributes_count * sizeof(attribute_info));
     int i;
     for (i = 0; i < field->attributes_count; i++) {
-        PARSE_OR_RETURN(attribute_info, field->attributes[i], buf);
+        PARSE_OR_RETURN1(attribute_info, field->attributes[i], buf, cp);
     }
     return RESULT_OK;
 }
 
-static result parse_method_info(buffer *buf, method_info *method) {
+static result parse_method_info(buffer *buf, method_info *method, cp_info *cp) {
     UINT_OR_RETURN(16, method->access_flags, buf);
     UINT_OR_RETURN(16, method->name_index, buf);
     UINT_OR_RETURN(16, method->descriptor_index, buf);
@@ -100,20 +111,13 @@ static result parse_method_info(buffer *buf, method_info *method) {
     method->attributes = malloc(method->attributes_count * sizeof(attribute_info));
     int i;
     for (i = 0; i < method->attributes_count; i++) {
-        PARSE_OR_RETURN(attribute_info, method->attributes[i], buf);
+        PARSE_OR_RETURN1(attribute_info, method->attributes[i], buf, cp);
     }
     return RESULT_OK;
 }
 
-static int utf8_str(cp_utf8 utf8, char s[], int max_len) {
-    assert(utf8.length < max_len-1);
-    memcpy(s, utf8.bytes, utf8.length);
-    s[utf8.length] = '\0';
-    return utf8.length;
-}
-
 int attribute_info_str(attribute_info attribute, char s[], int max_len) {
-    int written = sprintf(s, "attribute_info { attribute_name_index: %d, attribute_length: %d, attributes: <elided> }", attribute.attribute_name_index, attribute.attribute_length);
+    int written = sprintf(s, "attribute_info { }");
     return written;
 }
 
@@ -143,9 +147,7 @@ int cp_info_str(cp_info cp, char s[], int max_len) {
             break;
 
         case CP_UTF8: {
-            written = sprintf(s, "cp_utf8 { '");
-            written += utf8_str(cp.info.utf8, s+written, max_len-written);
-            written += sprintf(s+written, "' }");
+            written = sprintf(s, "cp_utf8 { '%s' }", cp.info.utf8.s);
             break;
         }
 
@@ -221,19 +223,31 @@ result parse_class(buffer *buf, class_file *class) {
     UINT_OR_RETURN(16, class->fields_count, buf);
     class->fields = malloc(class->fields_count * sizeof(field_info));
     for (i = 0; i < class->fields_count; i++) {
-        PARSE_OR_RETURN(field_info, class->fields[i], buf);
+        PARSE_OR_RETURN1(
+                field_info,
+                class->fields[i],
+                buf,
+                class->constant_pool);
     }
 
     UINT_OR_RETURN(16, class->methods_count, buf);
     class->methods = malloc(class->methods_count * sizeof(method_info));
     for (i = 0; i < class->methods_count; i++) {
-        PARSE_OR_RETURN(method_info, class->methods[i], buf);
+        PARSE_OR_RETURN1(
+                method_info,
+                class->methods[i],
+                buf,
+                class->constant_pool);
     }
 
     UINT_OR_RETURN(16, class->attributes_count, buf);
     class->attributes = malloc(class->attributes_count * sizeof(attribute_info));
     for (i = 0; i < class->attributes_count; i++) {
-        PARSE_OR_RETURN(attribute_info, class->attributes[i], buf);
+        PARSE_OR_RETURN1(
+                attribute_info,
+                class->attributes[i],
+                buf,
+                class->constant_pool);
     }
 
     return RESULT_OK;
