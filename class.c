@@ -206,6 +206,7 @@ static const char *attr_type(attribute_type type) {
 }
 
 int attribute_info_str(attribute_info *attr, char s[], int max_len) {
+    printf("type! %s\n", attr_type(attr->type));
     switch (attr->type) {
         case ATTR_CODE: return code_str(&attr->info.code, s, max_len);
         case ATTR_SOURCE_FILE: return source_file_str(&attr->info.source_file, s, max_len);
@@ -213,16 +214,6 @@ int attribute_info_str(attribute_info *attr, char s[], int max_len) {
     }
     fatal("unsupported attribute type: %s", attr_type(attr->type));
     return 0;
-}
-
-int field_info_str(field_info field, char s[], int max_len) {
-    int written = sprintf(s, "field_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes: <elided> }", field.access_flags, field.name_index, field.descriptor_index);
-    return written;
-}
-
-int method_info_str(method_info method, char s[], int max_len) {
-    int written = sprintf(s, "method_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes: <elided> }", method.access_flags, method.name_index, method.descriptor_index);
-    return written;
 }
 
 int cp_info_str(cp_info cp, char s[], int max_len) {
