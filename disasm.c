@@ -49,7 +49,7 @@ static void disasm(FILE *f) {
         printf("methods[%d] = %s\n", i, s);
     }
     for (i = 0; i < class.attributes_count; i++) {
-        attribute_info_str(class.attributes[i], s, BUF_LEN);
+        attribute_info_str(&class.attributes[i], s, BUF_LEN);
         printf("attributes[%d] = %s\n", i, s);
     }
 }

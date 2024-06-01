@@ -65,19 +65,52 @@ int cp_info_str(cp_info info, char s[], int max_len);
 
 typedef enum attribute_type {
     ATTR_CODE,
+    ATTR_SOURCE_FILE,
+    ATTR_LINE_NUMBERS,
 } attribute_type;
 
+typedef struct exception_info {
+    uint16_t start_pc, end_pc, handler_pc, catch_type;
+} exception_info;
+
+struct attribute_info;
+
 typedef struct code_attr {
+    uint16_t max_stack;
+    uint16_t max_locals;
+    uint32_t code_length;
+    uint8_t *code;
+    uint16_t exceptions_length;
+    exception_info *exceptions;
+    uint16_t attributes_count;
+    struct attribute_info *attributes;
 } code_attr;
+
+typedef struct source_file_attr {
+    uint16_t name_idx;
+    uint16_t source_file_idx;
+} source_file_attr;
+
+typedef struct line_number {
+    uint16_t start_pc;
+    uint16_t line;
+} line_number;
+
+typedef struct line_number_table_attr {
+    uint16_t length;
+    line_number *lines;
+} line_number_table_attr;
 
 typedef struct attribute_info {
     attribute_type type;
     union {
         code_attr code;
+        source_file_attr source_file;
+        line_number_table_attr line_numbers;
     } info;
 } attribute_info;
 
-int attribute_info_str(attribute_info field, char s[], int max_len);
+int attribute_info_str(attribute_info *attr, char s[], int max_len);
 
 typedef struct field_info {
     uint16_t access_flags;

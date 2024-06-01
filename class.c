@@ -71,6 +71,60 @@ static result parse_cp_string(buffer *buf, cp_string *string) {
     return RESULT_OK;
 }
 
+static result parse_source_file_attr(
+        buffer *buf,
+        source_file_attr *source_file) {
+    UINT_OR_RETURN(16, source_file->source_file_idx, buf);
+    return RESULT_OK;
+}
+
+static result parse_exception_info(buffer *buf, exception_info *exception) {
+    UINT_OR_RETURN(16, exception->start_pc, buf);
+    UINT_OR_RETURN(16, exception->end_pc, buf);
+    UINT_OR_RETURN(16, exception->handler_pc, buf);
+    UINT_OR_RETURN(16, exception->catch_type, buf);
+    return RESULT_OK;
+}
+
+static result parse_attribute_info(
+        buffer *buf,
+        attribute_info *attribute,
+        cp_info *cp);
+
+static result parse_code_attr(buffer *buf, code_attr *code, cp_info *cp) {
+    UINT_OR_RETURN(16, code->max_stack, buf);
+    UINT_OR_RETURN(16, code->max_locals, buf);
+    UINT_OR_RETURN(32, code->code_length, buf);
+    int i;
+    code->code = malloc(code->code_length);
+    for (i = 0; i < code->code_length; i++) {
+        UINT_OR_RETURN(8, code->code[i], buf);
+    }
+    UINT_OR_RETURN(16, code->exceptions_length, buf);
+    code->exceptions = malloc(sizeof(exception_info) * code->exceptions_length);
+    for (i = 0; i < code->exceptions_length; i++) {
+        PARSE_OR_RETURN(exception_info, code->exceptions[i], buf);
+    }
+    UINT_OR_RETURN(16, code->attributes_count, buf);
+    code->attributes = malloc(sizeof(attribute_info) * code->attributes_count);
+    for (i = 0; i < code->attributes_count; i++) {
+        PARSE_OR_RETURN1(attribute_info, code->attributes[i], buf, cp);
+    }
+    return RESULT_OK;
+}
+
+static result parse_line_number_table(
+        buffer *buf,
+        line_number_table_attr *lines) {
+    UINT_OR_RETURN(16, lines->length, buf);
+    lines->lines = malloc(sizeof(line_number) * lines->length);
+    int i;
+    for (i = 0; i < lines->length; i++) {
+        UINT_OR_RETURN(16, lines->lines[i].start_pc, buf);
+        UINT_OR_RETURN(16, lines->lines[i].line, buf);
+    }
+    return RESULT_OK;
+}
 
 static result parse_attribute_info(
         buffer *buf,
@@ -78,14 +132,19 @@ static result parse_attribute_info(
         cp_info *cp) {
     uint16_t attr_idx;
     UINT_OR_RETURN(16, attr_idx, buf);
-    uint32_t len;   
-    UINT_OR_RETURN(32, len, buf);
+    uint32_t attr_len;
+    UINT_OR_RETURN(32, attr_len, buf);
 
-    printf("ATTR: %s\n", cp[attr_idx].info.utf8.s);
-
-    int i;
-    uint8_t b;
-    for (i = 0; i < len; i++) UINT_OR_RETURN(8, b, buf);
+    const char *type = cp[attr_idx].info.utf8.s;
+    if (strcmp(type, "Code") == 0) {
+        return parse_code_attr(buf, &attribute->info.code, cp);
+    } else if (strcmp(type, "SourceFile") == 0) {
+        return parse_source_file_attr(buf, &attribute->info.source_file);
+    } else if (strcmp(type, "LineNumberTable") == 0) {
+        return parse_line_number_table(buf, &attribute->info.line_numbers);
+    } else {
+        fatal("unsupported attribute type: %s", type);
+    }
 
     return RESULT_OK;
 }
@@ -116,18 +175,53 @@ static result parse_method_info(buffer *buf, method_info *method, cp_info *cp) {
     return RESULT_OK;
 }
 
-int attribute_info_str(attribute_info attribute, char s[], int max_len) {
-    int written = sprintf(s, "attribute_info { }");
-    return written;
+static int line_number_table_str(
+        line_number_table_attr *lines,
+        char s[],
+        int max_len) {
+    return sprintf(s, "<LINES>");
+}
+
+static int source_file_str(
+        source_file_attr *source_file,
+        char s[],
+        int max_len) {
+    return sprintf(s, "<SOURCE>");
+}
+
+static int code_str(
+        code_attr *code,
+        char s[],
+        int max_len) {
+    return sprintf(s, "<CODE>");
+}
+
+static const char *attr_type(attribute_type type) {
+    switch (type) {
+        case ATTR_CODE: return "Code";
+        case ATTR_SOURCE_FILE: return "SourceFile";
+        case ATTR_LINE_NUMBERS: return "LineNumberTable";
+    }
+    assert(0);
+}
+
+int attribute_info_str(attribute_info *attr, char s[], int max_len) {
+    switch (attr->type) {
+        case ATTR_CODE: return code_str(&attr->info.code, s, max_len);
+        case ATTR_SOURCE_FILE: return source_file_str(&attr->info.source_file, s, max_len);
+        case ATTR_LINE_NUMBERS: return line_number_table_str(&attr->info.line_numbers, s, max_len);
+    }
+    fatal("unsupported attribute type: %s", attr_type(attr->type));
+    return 0;
 }
 
 int field_info_str(field_info field, char s[], int max_len) {
-    int written = sprintf(s, "field_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes_count: %d, attributes: <elided> }", field.access_flags, field.name_index, field.descriptor_index, field.attributes_count);
+    int written = sprintf(s, "field_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes: <elided> }", field.access_flags, field.name_index, field.descriptor_index);
     return written;
 }
 
 int method_info_str(method_info method, char s[], int max_len) {
-    int written = sprintf(s, "method_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes_count: %d, attributes: <elided> }", method.access_flags, method.name_index, method.descriptor_index, method.attributes_count);
+    int written = sprintf(s, "method_info { access_flags: %d, name_index: %d, descriptor_index: %d, attributes: <elided> }", method.access_flags, method.name_index, method.descriptor_index);
     return written;
 }
 
