@@ -12,10 +12,88 @@
 
 static const int BUF_LEN = 512;
 
+static int line_number_table_str(
+        line_number_table_attr *lines,
+        char s[],
+        int max_len) {
+    return sprintf(s, "<LINES>");
+}
+
+static int source_file_str(
+        source_file_attr *source_file,
+        char s[],
+        int max_len) {
+    return sprintf(s, "<SOURCE>");
+}
+
+static int code_str(
+        code_attr *code,
+        char s[],
+        int max_len) {
+    return sprintf(s, "<CODE>");
+}
+
+const char *attr_type(attribute_type type) {
+    switch (type) {
+        case ATTR_CODE: return "Code";
+        case ATTR_SOURCE_FILE: return "SourceFile";
+        case ATTR_LINE_NUMBERS: return "LineNumberTable";
+    }
+    assert(0);
+}
+
+int attribute_info_str(attribute_info *attr, char s[], int max_len) {
+    printf("type! %s\n", attr_type(attr->type));
+    switch (attr->type) {
+        case ATTR_CODE: return code_str(&attr->info.code, s, max_len);
+        case ATTR_SOURCE_FILE: return source_file_str(&attr->info.source_file, s, max_len);
+        case ATTR_LINE_NUMBERS: return line_number_table_str(&attr->info.line_numbers, s, max_len);
+    }
+    fatal("unsupported attribute type: %s", attr_type(attr->type));
+    return 0;
+}
+
+int cp_info_str(cp_info cp, char s[], int max_len) {
+    int written = 0;
+    switch (cp.tag) {
+        case CP_METHODREF:
+            written = sprintf(s, "cp_methodref { class_index: %d, name_and_type_index: %d }", cp.info.methodref.class_index, cp.info.methodref.name_and_type_index);
+            break;
+
+        case CP_CLASS:
+            written = sprintf(s, "cp_class { name_index: %d }", cp.info.class.name_index);
+            break;
+
+        case CP_NAME_AND_TYPE:
+            written = sprintf(s, "cp_name_and_type { name_index: %d, descriptor_index: %d }", cp.info.name_and_type.name_index, cp.info.name_and_type.descriptor_index);
+            break;
+
+        case CP_UTF8: {
+            written = sprintf(s, "cp_utf8 { '%s' }", cp.info.utf8);
+            break;
+        }
+
+        case CP_FIELDREF:
+            written = sprintf(s, "cp_fieldref { class_index: %d, name_and_type_index: %d }", cp.info.fieldref.class_index, cp.info.fieldref.name_and_type_index);
+            break;
+
+        case CP_STRING:
+            written = sprintf(s, "cp_string { string_index: %d }", cp.info.string.string_index);
+            break;
+
+        default:
+            fatal("unknown constant pool tag: %d", cp.tag);
+            break;
+    }
+    assert(written < max_len);
+    return written;
+}
+
+
 static void print_method(method_info *method, cp_info *cp) {
-    printf("method: %s\n", cp[method->name_index].info.utf8.s);
+    printf("method: %s\n", cp[method->name_index].info.utf8);
     printf("access flags: 0x%X\n", method->access_flags);
-    printf("method descriptor: %s\n", cp[method->descriptor_index].info.utf8.s);
+    printf("method descriptor: %s\n", cp[method->descriptor_index].info.utf8);
     int i;
     char s[BUF_LEN];
     for (i = 0; i < method->attributes_count; i++) {
@@ -25,9 +103,9 @@ static void print_method(method_info *method, cp_info *cp) {
 }
 
 static void print_field(field_info *field, cp_info *cp) {
-    printf("field: %s\n", cp[field->name_index].info.utf8.s);
+    printf("field: %s\n", cp[field->name_index].info.utf8);
     printf("access flags: 0x%X\n", field->access_flags);
-    printf("field descriptor: %s\n", cp[field->descriptor_index].info.utf8.s);
+    printf("field descriptor: %s\n", cp[field->descriptor_index].info.utf8);
     int i;
     char s[BUF_LEN];
     for (i = 0; i < field->attributes_count; i++) {

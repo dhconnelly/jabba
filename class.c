@@ -18,6 +18,12 @@
         if (r != RESULT_OK) return r; \
     } while (0)
 
+#define UINT_OR_RETURN(bits, lvalue, b) \
+    do { \
+        result r = buffer_uint##bits(b, &lvalue); \
+        if (r != RESULT_OK) return r; \
+    } while (0)
+
 const char *cp_tag_str(cp_tag tag) {
     switch (tag) {
         case CP_METHODREF: return "CONSTANT_Methodref";
@@ -53,16 +59,16 @@ static result parse_cp_name_and_type(buffer *buf, cp_name_and_type *nat) {
     return RESULT_OK;
 }
 
-static result parse_cp_utf8(buffer *buf, cp_utf8 *utf8) {
+static result parse_cp_utf8(buffer *buf, char **utf8) {
     uint16_t len;
     UINT_OR_RETURN(16, len, buf);
-    utf8->s = malloc(len+1);
+    *utf8 = malloc(len+1);
     uint8_t i, c;
     for (i = 0; i < len; i++) {
         UINT_OR_RETURN(8, c, buf);
-        utf8->s[i] = c;
+        (*utf8)[i] = c;
     }
-    utf8->s[len] = '\0';
+    (*utf8)[len] = '\0';
     return RESULT_OK;
 }
 
@@ -135,7 +141,7 @@ static result parse_attribute_info(
     uint32_t attr_len;
     UINT_OR_RETURN(32, attr_len, buf);
 
-    const char *type = cp[attr_idx].info.utf8.s;
+    const char *type = cp[attr_idx].info.utf8;
     if (strcmp(type, "Code") == 0) {
         return parse_code_attr(buf, &attribute->info.code, cp);
     } else if (strcmp(type, "SourceFile") == 0) {
@@ -143,7 +149,7 @@ static result parse_attribute_info(
     } else if (strcmp(type, "LineNumberTable") == 0) {
         return parse_line_number_table(buf, &attribute->info.line_numbers);
     } else {
-        fatal("unsupported attribute type: %s", type);
+        return RESULT_INVALID_ATTR;
     }
 
     return RESULT_OK;
@@ -167,89 +173,13 @@ static result parse_method_info(buffer *buf, method_info *method, cp_info *cp) {
     UINT_OR_RETURN(16, method->name_index, buf);
     UINT_OR_RETURN(16, method->descriptor_index, buf);
     UINT_OR_RETURN(16, method->attributes_count, buf);
-    method->attributes = malloc(method->attributes_count * sizeof(attribute_info));
+    method->attributes =
+        malloc(method->attributes_count * sizeof(attribute_info));
     int i;
     for (i = 0; i < method->attributes_count; i++) {
         PARSE_OR_RETURN1(attribute_info, method->attributes[i], buf, cp);
     }
     return RESULT_OK;
-}
-
-static int line_number_table_str(
-        line_number_table_attr *lines,
-        char s[],
-        int max_len) {
-    return sprintf(s, "<LINES>");
-}
-
-static int source_file_str(
-        source_file_attr *source_file,
-        char s[],
-        int max_len) {
-    return sprintf(s, "<SOURCE>");
-}
-
-static int code_str(
-        code_attr *code,
-        char s[],
-        int max_len) {
-    return sprintf(s, "<CODE>");
-}
-
-static const char *attr_type(attribute_type type) {
-    switch (type) {
-        case ATTR_CODE: return "Code";
-        case ATTR_SOURCE_FILE: return "SourceFile";
-        case ATTR_LINE_NUMBERS: return "LineNumberTable";
-    }
-    assert(0);
-}
-
-int attribute_info_str(attribute_info *attr, char s[], int max_len) {
-    printf("type! %s\n", attr_type(attr->type));
-    switch (attr->type) {
-        case ATTR_CODE: return code_str(&attr->info.code, s, max_len);
-        case ATTR_SOURCE_FILE: return source_file_str(&attr->info.source_file, s, max_len);
-        case ATTR_LINE_NUMBERS: return line_number_table_str(&attr->info.line_numbers, s, max_len);
-    }
-    fatal("unsupported attribute type: %s", attr_type(attr->type));
-    return 0;
-}
-
-int cp_info_str(cp_info cp, char s[], int max_len) {
-    int written = 0;
-    switch (cp.tag) {
-        case CP_METHODREF:
-            written = sprintf(s, "cp_methodref { class_index: %d, name_and_type_index: %d }", cp.info.methodref.class_index, cp.info.methodref.name_and_type_index);
-            break;
-
-        case CP_CLASS:
-            written = sprintf(s, "cp_class { name_index: %d }", cp.info.class.name_index);
-            break;
-
-        case CP_NAME_AND_TYPE:
-            written = sprintf(s, "cp_name_and_type { name_index: %d, descriptor_index: %d }", cp.info.name_and_type.name_index, cp.info.name_and_type.descriptor_index);
-            break;
-
-        case CP_UTF8: {
-            written = sprintf(s, "cp_utf8 { '%s' }", cp.info.utf8.s);
-            break;
-        }
-
-        case CP_FIELDREF:
-            written = sprintf(s, "cp_fieldref { class_index: %d, name_and_type_index: %d }", cp.info.fieldref.class_index, cp.info.fieldref.name_and_type_index);
-            break;
-
-        case CP_STRING:
-            written = sprintf(s, "cp_string { string_index: %d }", cp.info.string.string_index);
-            break;
-
-        default:
-            fatal("unknown constant pool tag: %d", cp.tag);
-            break;
-    }
-    assert(written < max_len);
-    return written;
 }
 
 static result parse_cp_info(buffer *buf, cp_info *x) {
@@ -275,7 +205,7 @@ static result parse_cp_info(buffer *buf, cp_info *x) {
             PARSE_OR_RETURN(cp_string, x->info.string, buf);
             break;
         default:
-            fatal("bad cp tag at offset %d: %d", buf->offset, tag);
+            return RESULT_INVALID_CP;
             break;
     }
     x->tag = tag;

@@ -11,34 +11,30 @@
  * https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html
  */
 
-typedef struct cp_methodref {
+typedef struct {
     uint16_t class_index;
     uint16_t name_and_type_index;
 } cp_methodref;
 
-typedef struct cp_fieldref {
+typedef struct {
     uint16_t class_index;
     uint16_t name_and_type_index;
 } cp_fieldref;
 
-typedef struct cp_class {
+typedef struct {
     uint16_t name_index;
 } cp_class;
 
-typedef struct cp_name_and_type {
+typedef struct {
     uint16_t name_index;
     uint16_t descriptor_index;
 } cp_name_and_type;
 
-typedef struct cp_utf8 {
-    char *s;
-} cp_utf8;
-
-typedef struct cp_string {
+typedef struct {
     uint16_t string_index;
 } cp_string;
 
-typedef enum cp_tag {
+typedef enum {
     CP_CLASS = 7,
     CP_METHODREF = 10,
     CP_NAME_AND_TYPE = 12,
@@ -47,35 +43,32 @@ typedef enum cp_tag {
     CP_STRING = 8,
 } cp_tag;
 
-const char *cp_tag_str(cp_tag tag);
-
-typedef struct cp_info {
+typedef struct {
     cp_tag tag;
     union {
         cp_methodref methodref;
         cp_class class;
         cp_name_and_type name_and_type;
-        cp_utf8 utf8;
+        char *utf8;
         cp_fieldref fieldref;
         cp_string string;
     } info;
 } cp_info;
 
-int cp_info_str(cp_info info, char s[], int max_len);
-
-typedef enum attribute_type {
+typedef enum {
     ATTR_CODE,
     ATTR_SOURCE_FILE,
     ATTR_LINE_NUMBERS,
 } attribute_type;
 
-typedef struct exception_info {
+typedef struct {
     uint16_t start_pc, end_pc, handler_pc, catch_type;
 } exception_info;
 
+/* forward declaration since this is a recursive structure */
 struct attribute_info;
 
-typedef struct code_attr {
+typedef struct {
     uint16_t max_stack;
     uint16_t max_locals;
     uint32_t code_length;
@@ -86,17 +79,17 @@ typedef struct code_attr {
     struct attribute_info *attributes;
 } code_attr;
 
-typedef struct source_file_attr {
+typedef struct {
     uint16_t name_idx;
     uint16_t source_file_idx;
 } source_file_attr;
 
-typedef struct line_number {
+typedef struct {
     uint16_t start_pc;
     uint16_t line;
 } line_number;
 
-typedef struct line_number_table_attr {
+typedef struct {
     uint16_t length;
     line_number *lines;
 } line_number_table_attr;
@@ -110,9 +103,7 @@ typedef struct attribute_info {
     } info;
 } attribute_info;
 
-int attribute_info_str(attribute_info *attr, char s[], int max_len);
-
-typedef struct field_info {
+typedef struct {
     uint16_t access_flags;
     uint16_t name_index;
     uint16_t descriptor_index;
@@ -120,7 +111,7 @@ typedef struct field_info {
     attribute_info *attributes;
 } field_info;
 
-typedef struct method_info {
+typedef struct {
     uint16_t access_flags;
     uint16_t name_index;
     uint16_t descriptor_index;
@@ -128,7 +119,7 @@ typedef struct method_info {
     attribute_info *attributes;
 } method_info;
 
-typedef struct class_file {
+typedef struct {
     uint32_t magic;
     uint16_t minor_version;
     uint16_t major_version;
