@@ -1,4 +1,4 @@
-#include "class.h"
+#include "parse.h"
 
 #include <assert.h>
 #include <memory.h>
@@ -23,18 +23,6 @@
         result r = buffer_uint##bits(b, &lvalue); \
         if (r != RESULT_OK) return r; \
     } while (0)
-
-const char *cp_tag_str(cp_tag tag) {
-    switch (tag) {
-        case CP_METHODREF: return "CONSTANT_Methodref";
-        case CP_CLASS: return "CONSTANT_Class";
-        case CP_NAME_AND_TYPE: return "CONSTANT_NameAndType";
-        case CP_UTF8: return "CONSTANT_Utf8";
-        case CP_FIELDREF: return "CONSTANT_Fieldref";
-        case CP_STRING: return "CONSTANT_String";
-    }
-    assert(0);
-}
 
 static result parse_cp_methodref(buffer *buf, cp_methodref *methodref) {
     UINT_OR_RETURN(16, methodref->class_index, buf);

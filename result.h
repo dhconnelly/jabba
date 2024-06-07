@@ -2,7 +2,7 @@
 #define RESULT_H_
 
 /* TODO: replace this with a string reason and success/failure */
-typedef enum result {
+typedef enum {
     RESULT_OK,
     RESULT_EOF,
     RESULT_ERRNO,

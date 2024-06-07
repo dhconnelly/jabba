@@ -8,7 +8,7 @@
 
 /* Utilities for reading binary data */
 
-typedef struct buffer {
+typedef struct {
     FILE *f;
     int offset;
 } buffer;

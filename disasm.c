@@ -8,9 +8,22 @@
 #include "buffer.h"
 #include "class.h"
 #include "logging.h"
+#include "parse.h"
 #include "result.h"
 
 static const int BUF_LEN = 512;
+
+const char *cp_tag_str(cp_tag tag) {
+    switch (tag) {
+        case CP_METHODREF: return "CONSTANT_Methodref";
+        case CP_CLASS: return "CONSTANT_Class";
+        case CP_NAME_AND_TYPE: return "CONSTANT_NameAndType";
+        case CP_UTF8: return "CONSTANT_Utf8";
+        case CP_FIELDREF: return "CONSTANT_Fieldref";
+        case CP_STRING: return "CONSTANT_String";
+    }
+    assert(0);
+}
 
 static int line_number_table_str(
         line_number_table_attr *lines,

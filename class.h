@@ -138,8 +138,4 @@ typedef struct {
     attribute_info *attributes;
 } class_file;
 
-result parse_class(buffer *buf, class_file *class);
-
-/* TODO: free */
-
 #endif
