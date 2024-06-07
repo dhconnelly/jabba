@@ -9,7 +9,7 @@ all: $(TARGETS)
 clean:
 	rm -f *.o $(TARGETS)
 
-disasm: disasm.o logging.o buffer.o result.o parse.o
+disasm: disasm.o logging.o buffer.o result.o parse.o hashtable.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 logging.o: logging.c logging.h
@@ -25,4 +25,7 @@ buffer.o: buffer.c buffer.h result.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 disasm.o: disasm.c buffer.h logging.h class.h parse.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+hashtable.o: hashtable.c hashtable.h
 	$(CC) $(CFLAGS) -c $< -o $@
