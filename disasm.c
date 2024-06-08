@@ -176,19 +176,21 @@ int main(int argc, char *argv[]) {
     if (f == NULL) fatal("failed to open %s: %s", argv[1], strerror(errno));
     disasm(f);
 
-    table_int tab = make_table_int();
-    int *foo = lookup_int(tab, "foo");
+    table_int tab;
+    init_table_int(&tab);
+    int *foo = lookup_int(&tab, "foo");
     assert(foo == NULL);
 
-    install_int(tab, "foo", 34, NULL);
-    install_int(tab, "bar", 17, NULL);
-    install_int(tab, "baz", -1, NULL);
+    init_table_int(&tab);
+    install_int(&tab, "foo", 34);
+    install_int(&tab, "bar", 17);
+    install_int(&tab, "baz", -1);
     char *keys[] = {"foo", "bar", "baz"};
     int i;
     for (i = 0; i < 3; i++) {
-        printf("tab['%s'] == %d\n", keys[i], *lookup_int(tab, keys[i]));
-        install_int(tab, keys[i], 0, NULL);
-        printf("tab['%s'] == %d\n", keys[i], *lookup_int(tab, keys[i]));
+        printf("tab['%s'] == %d\n", keys[i], *lookup_int(&tab, keys[i]));
+        install_int(&tab, keys[i], 0);
+        printf("tab['%s'] == %d\n", keys[i], *lookup_int(&tab, keys[i]));
     }
 
     return 0;

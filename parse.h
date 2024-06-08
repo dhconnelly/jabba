@@ -9,6 +9,4 @@
 
 result parse_class(buffer *buf, class_file *class);
 
-/* TODO: free */
-
 #endif

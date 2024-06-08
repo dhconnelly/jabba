@@ -138,4 +138,6 @@ typedef struct {
     attribute_info *attributes;
 } class_file;
 
+/* TODO: free */
+
 #endif
